@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TPS 行政與教學系統 Portal</title>
+    <!-- 引入 Tailwind CSS 排版庫 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neu-bg': '#E0E5EC',
+                        'neu-text': '#4D5B7C',
+                        'neu-blue': '#3B82F6',
+                        'neu-dark': '#2D3748',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- 獨立引入 CSS 檔 -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-neu-bg min-h-screen text-neu-text transition-colors duration-300">
+
+    <!-- 頂部導覽列 -->
+    <header class="sticky top-0 z-30 bg-neu-bg/90 backdrop-blur-md px-6 py-4 mb-6 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl neu-flat flex items-center justify-center text-neu-blue font-bold text-xl">
+                        TPS
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg text-neu-dark leading-tight">行政與教學系統 Portal</h1>
+                        <p class="text-xs text-gray-500">田家炳小學資訊入口</p>
+                    </div>
+                </div>
+                <div id="authContainerMobile" class="md:hidden flex items-center gap-2"></div>
+            </div>
+
+            <!-- 搜尋欄 -->
+            <div class="w-full md:max-w-md relative">
+                <input type="text" id="searchInput" placeholder="搜尋系統名稱、功能關鍵字... (按 '/' 快速搜尋)" 
+                       class="w-full pl-11 pr-4 py-3 rounded-2xl neu-input border-none text-sm focus:outline-none text-neu-dark placeholder-gray-400">
+                <svg class="w-5 h-5 text-gray-400 absolute left-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+
+            <!-- 登入與管理員選單 -->
+            <div id="authContainerDesktop" class="hidden md:flex items-center gap-3"></div>
+        </div>
+    </header>
+
+    <!-- 主要內容區 -->
+    <main class="max-w-7xl mx-auto px-6 pb-16">
+
+        <!-- 全校動態公告欄 -->
+        <div id="announcementBox" class="hidden mb-8 p-4 rounded-2xl neu-flat border-l-4 border-neu-blue flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">📢</span>
+                <p id="announcementText" class="text-sm font-medium text-neu-dark"></p>
+            </div>
+        </div>
+
+        <!-- 分類頁籤 -->
+        <div class="flex items-center gap-3 overflow-x-auto pb-4 mb-8 no-scrollbar" id="categoryTabs">
+            <button onclick="filterCategory('all', this)" class="category-btn neu-pressed text-neu-blue px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap">🌟 全部系統</button>
+            <button onclick="filterCategory('fav', this)" class="category-btn neu-flat text-neu-text px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap">❤️ 常用系統</button>
+            <button onclick="filterCategory('行政', this)" class="category-btn neu-flat text-neu-text px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap">📋 行政管理</button>
+            <button onclick="filterCategory('教學', this)" class="category-btn neu-flat text-neu-text px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap">📚 教學工具</button>
+            <button onclick="filterCategory('學生', this)" class="category-btn neu-flat text-neu-text px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap">👨‍🎓 學生事務</button>
+        </div>
+
+        <!-- 卡片網格 -->
+        <div id="appsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    </main>
+
+    <!-- 🔒 密碼驗證 Modal -->
+    <div id="passwordModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="neu-card w-full max-w-md p-6 rounded-3xl">
+            <h3 class="text-lg font-bold text-neu-dark mb-2">🔐 受保護系統驗證</h3>
+            <p class="text-sm text-gray-500 mb-4" id="protectedAppTitle">請輸入密碼以存取此系統：</p>
+            <input type="password" id="appPasswordInput" placeholder="請輸入存取密碼" class="w-full p-3 rounded-xl neu-input border-none text-sm mb-4 focus:outline-none">
+            <div class="flex justify-end gap-3">
+                <button onclick="closePasswordModal()" class="px-4 py-2 rounded-xl neu-btn text-sm font-bold">取消</button>
+                <button onclick="verifyPassword()" class="px-5 py-2 rounded-xl neu-btn text-sm font-bold text-neu-blue">確認進入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚧 開發中 Modal -->
+    <div id="devModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="neu-card w-full max-w-md p-6 rounded-3xl text-center">
+            <div class="text-4xl mb-3">🚧</div>
+            <h3 class="text-lg font-bold text-neu-dark mb-2">系統開發中</h3>
+            <p class="text-sm text-gray-500 mb-6">此功能目前正在建置測試中，暫未公開使用。</p>
+            <button onclick="closeDevModal()" class="px-6 py-2.5 rounded-xl neu-btn text-sm font-bold text-neu-blue">我知道了</button>
+        </div>
+    </div>
+
+    <!-- ⚙️ 管理員後台 Modal -->
+    <div id="adminModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="neu-card w-full max-w-4xl max-h-[90vh] flex flex-col p-6 rounded-3xl">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-300">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">⚙️</span>
+                    <h2 class="text-xl font-bold text-neu-dark">管理員控制台</h2>
+                </div>
+                <button onclick="closeAdminModal()" class="w-8 h-8 rounded-full neu-btn flex items-center justify-center text-gray-500 font-bold">✕</button>
+            </div>
+
+            <div class="flex gap-2 mb-6">
+                <button onclick="switchAdminTab('apps')" id="tabBtnApps" class="px-4 py-2 rounded-xl neu-pressed text-neu-blue font-bold text-sm">📱 Apps 管理</button>
+                <button onclick="switchAdminTab('announcement')" id="tabBtnAnn" class="px-4 py-2 rounded-xl neu-flat text-neu-text font-bold text-sm">📢 修改公告</button>
+                <button onclick="switchAdminTab('admins')" id="tabBtnAdmins" class="px-4 py-2 rounded-xl neu-flat text-neu-text font-bold text-sm">👥 管理員名單</button>
+            </div>
+
+            <div class="overflow-y-auto flex-1 pr-2">
+                <div id="adminTabApps">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-neu-dark">現有系統列表</h3>
+                        <button onclick="openAppFormModal()" class="px-4 py-2 rounded-xl neu-btn text-sm font-bold text-neu-blue">+ 新增系統 App</button>
+                    </div>
+                    <div id="adminAppList" class="space-y-3"></div>
+                </div>
+
+                <div id="adminTabAnn" class="hidden">
+                    <h3 class="font-bold text-neu-dark mb-4">全校告示板設定</h3>
+                    <div class="space-y-4">
+                        <textarea id="adminAnnInput" rows="4" placeholder="請輸入告示欄內容..." class="w-full p-4 rounded-xl neu-input border-none text-sm focus:outline-none"></textarea>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="adminAnnVisible" class="w-4 h-4 text-neu-blue rounded">
+                            <label for="adminAnnVisible" class="text-sm text-neu-dark font-medium">顯示此公告</label>
+                        </div>
+                        <button onclick="saveAnnouncement()" class="px-6 py-2.5 rounded-xl neu-btn text-sm font-bold text-neu-blue">儲存公告設定</button>
+                    </div>
+                </div>
+
+                <div id="adminTabAdmins" class="hidden">
+                    <h3 class="font-bold text-neu-dark mb-4">管理員權限名單</h3>
+                    <div class="flex gap-3 mb-6">
+                        <input type="email" id="newAdminEmailInput" placeholder="例如：teacher@tps.edu.hk" class="flex-1 p-3 rounded-xl neu-input border-none text-sm focus:outline-none">
+                        <button onclick="addAdminEmail()" class="px-5 py-2 rounded-xl neu-btn text-sm font-bold text-neu-blue">+ 新增管理員</button>
+                    </div>
+                    <div id="adminEmailList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ➕/✏️ 新增/編輯 App 子 Modal -->
+    <div id="appFormModal" class="fixed inset-0 z-[60] hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="neu-card w-full max-w-lg p-6 rounded-3xl">
+            <h3 id="appFormTitle" class="text-lg font-bold text-neu-dark mb-4">新增系統 App</h3>
+            <form id="appForm" onsubmit="handleSaveApp(event)" class="space-y-4">
+                <input type="hidden" id="formAppId">
+                <div>
+                    <label class="block text-xs font-bold mb-1">系統名稱 *</label>
+                    <input type="text" id="formTitle" required class="w-full p-3 rounded-xl neu-input border-none text-sm focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1">系統描述</label>
+                    <input type="text" id="formDesc" class="w-full p-3 rounded-xl neu-input border-none text-sm focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1">分類 (逗號分開，如: 行政,教學)</label>
+                    <input type="text" id="formCategory" required placeholder="行政,教學" class="w-full p-3 rounded-xl neu-input border-none text-sm focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1">系統連結 URL *</label>
+                    <input type="url" id="formUrl" required class="w-full p-3 rounded-xl neu-input border-none text-sm focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1">Icon 檔名 (放於 public/assets/icons/)</label>
+                    <input type="text" id="formIconName" placeholder="例如: moodle.png" class="w-full p-3 rounded-xl neu-input border-none text-sm focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="formIsDev" class="w-4 h-4 text-neu-blue rounded">
+                        <label for="formIsDev" class="text-xs font-bold">🚧 開發中 (Dev)</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="formIsProtected" onchange="togglePasswordInput(this.checked)" class="w-4 h-4 text-neu-blue rounded">
+                        <label for="formIsProtected" class="text-xs font-bold">🔒 設有存取密碼</label>
+                    </div>
+                </div>
+                <div id="passwordInputContainer" class="hidden">
+                    <label class="block text-xs font-bold mb-1">密碼設定</label>
+                    <input type="text" id="formPassword" placeholder="設定該系統進入密碼" class="w-full p-3 rounded-xl neu-input border-none text-sm focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeAppFormModal()" class="px-4 py-2 rounded-xl neu-btn text-sm font-bold">取消</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl neu-btn text-sm font-bold text-neu-blue">儲存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden px-5 py-3 rounded-2xl neu-flat text-sm font-bold transition-all duration-300"></div>
+
+    <!-- 獨立引入 JS 檔 -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
